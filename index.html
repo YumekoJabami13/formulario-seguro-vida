@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Assistência Funeral e Seguro de Vida</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary-color: #003366;
+            --secondary-color: #005f99;
+            --accent-color: #66a3ff;
+            --light-color: #e9d8a6;
+            --text-color: #333;
+            --light-text: #f8f9fa;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f5f5f5; color: var(--text-color); line-height: 1.6; }
+        .container { max-width: 800px; margin: 2rem auto; padding: 2rem; background: white; border-radius: 8px; box-shadow: var(--shadow); }
+        header { text-align: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid #eee; }
+        header img { width: 120px; margin-bottom: 1rem; }
+        h1, h2 { color: var(--primary-color); margin-bottom: 1rem; }
+        .section-title { display: flex; align-items: center; margin: 1.5rem 0; color: var(--secondary-color); }
+        .section-title i { margin-right: 0.5rem; }
+        .form-group { margin-bottom: 1.5rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
+        input, select, textarea { width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; }
+        .btn { display: inline-block; background-color: var(--primary-color); color: white; padding: 0.8rem 1.5rem; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; font-weight: 600; text-align: center; width: 100%; transition: 0.3s; }
+        .btn:hover { background-color: var(--secondary-color); }
+        .dependent-input { background-color: #f9f9f9; padding: 1rem; border-radius: 4px; margin-bottom: 1rem; border: 1px dashed #ddd; position: relative; }
+        .remove-dependent { position: absolute; top: 10px; right: 10px; background: #ff6b6b; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; }
+        .numero-fixo { display: flex; align-items: center; }
+        .numero-fixo span { background-color: #ddd; padding: 0.8rem; border: 1px solid #ddd; border-radius: 4px 0 0 4px; font-weight: 600; }
+        .numero-fixo input { border-radius: 0 4px 4px 0; border-left: none; }
+        .required:after { content: " *"; color: red; }
+        .confirmation-message { display: none; background-color: #d4edda; color: #155724; padding: 1rem; border-radius: 4px; margin-top: 1rem; text-align: center; }
+        .error-message { display: none; background-color: #f8d7da; color: #721c24; padding: 1rem; border-radius: 4px; margin-top: 1rem; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="logo sinaf.png" alt="Logo"/>
+            <h1>Assistência Funeral e Seguro de Vida</h1>
+            <p>Preencha os dados para cotação via WhatsApp</p>
+        </header>
+
+        <form id="insuranceForm">
+            <div class="section-title"><i class="fas fa-user"></i><h2>Dados do Titular</h2></div>
+            <div class="form-group"><label class="required">Nome Completo</label><input type="text" name="name" required /></div>
+            <div class="form-group"><label class="required">Idade</label><input type="number" name="age" required /></div>
+            <div class="form-group"><label class="required">E-mail</label><input type="email" name="email" required /></div>
+            <div class="form-group"><label class="required">Número WhatsApp</label>
+                <div class="numero-fixo"><span>+55</span><input type="tel" name="client-phone" placeholder="DDD + número" required /></div>
+            </div>
+            <div class="form-group"><label class="required">Profissão</label><input type="text" name="profession" required /></div>
+            <div class="form-group"><label class="required">Endereço</label><input type="text" name="address" required /></div>
+
+            <div class="section-title"><i class="fas fa-users"></i><h2>Dependentes (opcional)</h2></div>
+            <div id="dependents-container"></div>
+            <button type="button" id="addDependent" class="btn" style="background-color: var(--light-color); color: #333; margin-bottom: 1.5rem;">
+                <i class="fas fa-plus"></i> Adicionar Dependente
+            </button>
+
+            <div class="form-group">
+                <label>Informações Adicionais</label>
+                <textarea name="message" placeholder="Dúvidas ou observações extras..."></textarea>
+            </div>
+
+            <button type="submit" class="btn" id="submitBtn">
+                <i class="fab fa-whatsapp"></i> Enviar pelo WhatsApp
+            </button>
+
+            <div id="confirmationMessage" class="confirmation-message">✅ Enviado com sucesso! Aguarde nosso contato.</div>
+            <div id="errorMessage" class="error-message"></div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('insuranceForm');
+            const dependentsContainer = document.getElementById('dependents-container');
+            const addDependentBtn = document.getElementById('addDependent');
+            const submitBtn = document.getElementById('submitBtn');
+
+            // Função para adicionar campos de dependente
+            addDependentBtn.addEventListener('click', () => {
+                const div = document.createElement('div');
+                div.className = 'dependent-input';
+                div.innerHTML = `
+                    <button type="button" class="remove-dependent">×</button>
+                    <div class="form-group">
+                        <label>Nome do Dependente</label>
+                        <input type="text" name="dependent-name[]" placeholder="Nome completo" />
+                    </div>
+                    <div class="form-group">
+                        <label>Grau de Parentesco</label>
+                        <input type="text" name="dependent-relation[]" placeholder="Ex: Cônjuge, Filho..." />
+                    </div>
+                    <div class="form-group">
+                        <label>Idade</label>
+                        <input type="number" name="dependent-age[]" placeholder="Idade" />
+                    </div>
+                `;
+                dependentsContainer.appendChild(div);
+                div.querySelector('.remove-dependent').onclick = () => div.remove();
+            });
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                // Visual de carregamento
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+                document.getElementById('errorMessage').style.display = 'none';
+
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+                
+                // Coleta específica para garantir que os arrays cheguem ao servidor
+                data.dependentNames = Array.from(document.querySelectorAll('input[name="dependent-name[]"]')).map(i => i.value);
+                data.dependentRelations = Array.from(document.querySelectorAll('input[name="dependent-relation[]"]')).map(i => i.value);
+                data.dependentAges = Array.from(document.querySelectorAll('input[name="dependent-age[]"]')).map(i => i.value);
+
+                try {
+                    const res = await fetch('http://localhost:3000/send-whatsapp', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+
+                    if (res.ok) {
+                        document.getElementById('confirmationMessage').style.display = 'block';
+                        form.reset();
+                        dependentsContainer.innerHTML = '';
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    } else {
+                        throw new Error('Erro ao processar envio.');
+                    }
+                } catch (err) {
+                    const errDiv = document.getElementById('errorMessage');
+                    errDiv.style.display = 'block';
+                    errDiv.innerText = '❌ Erro: Verifique se o servidor Node.js está rodando.';
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fab fa-whatsapp"></i> Enviar pelo WhatsApp';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
